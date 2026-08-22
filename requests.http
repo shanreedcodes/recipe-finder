@@ -1,0 +1,5 @@
+@host = http://localhost:3000 
+#  pull the URL into a @host variable, so no inline hardcoded URL
+
+### health
+GET {{host}}/api/health
