@@ -3,13 +3,17 @@
 > This server is a minimal Express app with one route, GET /api/health, that returns {"ok": true} to confirm the process is running and able to handle requests. It has no dependencies yet, no environment values read, no external calls, so the one question it answers can't fail because something else failed. 
 
 
-1. `git init`
-2. `.gitignore`
-3. `npm init -y`
-4. `npm pkg set type=module`
-    - `type: module` is what gives you `import` instead of `require`
-5. Create Server
-6. Create `requests.http` file
+1. Add git for github repository `git init`
+2. Create a `.gitignore` file
+3. Create Server Folder: `server/`
+4. Create a NodeJS Application in the server folder
+    - `npm init -y`: used to set all the answers of the setup questions to default answers
+    - A package.json file will be created in the project folder as proof that the project has been initialized
+    - `npm pkg set type=module`
+        - `type: module` is what gives you `import` instead of `require`
+5. Create Server: `server/index.js`
+6. Create `requests.http` file at the root of repo
+7. Create `.env` and `.env.example` files
 
 -----
 
@@ -42,14 +46,23 @@
 
 > [VS Code Rest Client Repo](https://github.com/Huachao/vscode-restclient/blob/master/README.md)
 
+---
+
+## `.env` file
+- **`PORT=`:** port the server will run on
+- **`NODE_ENV=`:** an environment variable that says what mode the app is running in
+    - A convention the Node ecosystem agreed on, typically "development", "production", or "test"
+    - A huge number of libraries check it and change behavior based on what they find
+    - For a Node backend specifically, the use can decide how much error detail the client gets: full stack trace in dev, generic message in prod
+    - Alternatively you could use error-handling middleware instead
+
 ## Summary
 - **Module system decision, ESM import/export pair.** `import express from "express"` only works because `server/package.json` sets `"type": "module"`. This is why I can use `import`, and not `require`, and it's also why relative imports elsewhere in this project need the `.js` extension.
 - **Express's request/response handler contract.** `app.get(path, (req, res) => {...})` demonstrates the shape every route in the app will follow: 
     - a method, a path, and a two-argument handler where req describes what came in and res is how you answer it. 
     - `res.status(200).json({...})` shows the chainable style Express's API is built around
-    - `res.json()` serializes the object to a string and sets `Content-Type: application/json` for you
 - **A server is a process that stays alive because of an open socket.** 
-    - `app.listen(3000, callback)` keeps the Node process running instead of exiting immediately after the script finishes, because the TCP listener is holding the event loop open. Everything about Node being "single-threaded but non-blocking" is downstream of that one call.
+    - `app.listen(3001, callback)` keeps the Node process running instead of exiting immediately after the script finishes, because the TCP listener is holding the event loop open. Everything about Node being "single-threaded but non-blocking" is downstream of that one call.
 - **The server check** 
     - `/api/health returning {"ok": true}` is a route that answers "is the process up and routing requests" with zero dependency, because a health check that can fail because its own dependencies failed isn't answering the question it exists to answer
 -**requests.http** demonstrates the API's contract being recorded as something you actually run, committed to git, rather tested elsewhere.

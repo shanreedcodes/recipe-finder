@@ -3,9 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with
 code in this repository.
 
-**Step 0 of 10, not finished.** `server/index.js` runs as a minimal Express
-server on port 3000 serving `GET /`. It does not yet load `.env`, does not
-serve `/api/health`, and does not match what `requests.http` asks for. See
+**Step 0 of 10, mostly finished.** `server/index.js` loads `.env` via
+`dotenv`, serves `GET /api/health` on port `3001` (from `.env`, `|| 3001`
+fallback) returning `{"ok": true}`, and matches `requests.http`. `mode` and
+`pointsToday` in the health response, `express.json()`, and the
+`server/app.js` decision are deliberately deferred to step 1. See
 "Build order" for what is left.
 
 This file records what was decided before the code was written, and why, so the
@@ -115,25 +117,29 @@ Settled this session:
 ## Layout
 
 ```
-.env                gitignored, holds both API keys plus PORT, MODE, ceiling
-.env.example        committed, keys blanked
+.env                gitignored, currently PORT and NODE_ENV only; API keys,
+                    MODE, and ceiling are added in step 1
+.env.example        committed, mirrors .env's current keys
 requests.http       REST Client requests, the API test surface
 CLAUDE.md           this file
 README.md           setup sequence
 server/
   index.js          entry point: load .env, start the listener
-  app.js            empty. Either app construction, or delete it.
+  app.js            does not exist yet; app-construction split, or dropped
+                     from the plan, decided in step 1
 client/             does not exist yet, step 3 creates it
 ```
 
 ## Build order
 
-0. **Skeleton.** Not finished. Done: `git init`, `.gitignore`, `.env` and
-   `.env.example`, `server/package.json`, `requests.http`. Left: `.env` loaded
-   in `index.js`, port and route agreeing with `requests.http`
-   (`GET /api/health` on 3001 returning `{ok, mode, pointsToday}`),
-   `express.json()` registered, `PORT` and `NODE_ENV` added to `.env.example`,
-   and a decision on `server/app.js`.
+0. **Skeleton.** Mostly done. Done: `git init`, `.gitignore`, `.env` and
+   `.env.example` (currently `PORT` and `NODE_ENV` only), `server/package.json`,
+   `requests.http`, `.env` loaded in `index.js`, `GET /api/health` on `3001`
+   returning `{"ok": true}` matching `requests.http`. Deliberately left for
+   step 1: `mode`/`pointsToday` in the health response, `SPOONACULAR_API_KEY`/
+   `ANTHROPIC_API_KEY`/`SPOONACULAR_MODE`/`DAILY_POINT_CEILING` in
+   `.env`/`.env.example`, `express.json()` registration, and a decision on
+   `server/app.js`.
 1. **The Spoonacular client, offline first.** `spoonacular.js` normalizing to
    an internal `Recipe` shape, `cache.js` on disk, `points.js` as a daily
    ledger, `SPOONACULAR_MODE=live|cache|fixture`, and a fixture recorder.
@@ -169,6 +175,13 @@ client/             does not exist yet, step 3 creates it
 - **Express 5 auto-forwards rejected promises** from `async` handlers to the
   error middleware. Express 4 did not. Routes can be `async` and just `throw`,
   with no try/catch and no `next(err)`.
+- **Express 5 passes `app.listen()` startup errors to the callback instead of
+  throwing them unhandled.** Express 4 and raw `http.Server` invoke the
+  callback with no arguments on success and let a bind failure (like
+  `EADDRINUSE`) surface as an unhandled `'error'` event. Express 5 attaches
+  its own listener and calls the callback with the error as its first
+  argument, so `(error) => { if (error) throw error; ... }` is the correct,
+  documented pattern on this version, not dead code.
 - **Middleware order is execution order.** Specific routes first, the no-path
   catch-all last, the four-argument error handler at the bottom. A catch-all
   above the routes makes every request 404 while the routes still sit visible
