@@ -23,10 +23,6 @@ A web app that suggests recipes from what is already in your pantry. Ingredient
 input, dietary filters, a step-by-step cooking mode with timers and voice, and
 saved and shareable recipes. Portfolio project.
 
-It is a sibling of `../project-assistant` and `../study-assistant`, both Python.
-This is the first JavaScript project of the three, so their code does not carry
-over, but three of their conventions do, marked below.
-
 ## How to work in this repo
 
 **Shan writes the code.** Per build step, give the contract (routes, function
@@ -47,7 +43,7 @@ The point is learning React and Node, not shipping fast.
 | Repo layout | `server/` and `client/`, one `package.json` each | No workspaces. Two independent installs is less to break. |
 | API key handling | Every external call goes through Express | Anything reachable from React is public. `import.meta.env.VITE_*` is compiled into the bundle. |
 | Saves | LocalStorage first | Bookmarks work with the server down. Share links come in step 9. |
-| Shares | JSON file store behind an interface | Same pattern as `projects_store.py` in `../project-assistant`. |
+| Shares | JSON file store behind an interface | The interface, not a bare file read/write, is what lets the store swap to a database later without touching callers. |
 | Deployment | Out of scope for the first pass | Build it so it runs locally. Same approach as the two siblings. |
 
 ## The quota, and what it forces
@@ -87,10 +83,8 @@ diet enum and is free.
 
 ## Conventions
 
-Three carried from `../project-assistant`:
-
-- **Read `process.env` inside the handler, not at module scope.** Same reason
-  `EMBED_BACKEND` is read per call there: a test can flip it, and it sidesteps a
+- **Read `process.env` inside the handler, not at module scope.** A test can
+  flip the env var and see the change take effect, and it sidesteps a
   load-order trap where an import-sorting linter moving `dotenv/config` below
   another import breaks things silently.
 - **The diet and intolerance vocabularies live in one module, are served by
@@ -191,11 +185,11 @@ client/             does not exist yet, step 3 creates it
   null. Use `||` for string settings so an empty string also falls back; use
   `??` only where `0` or `''` are legitimate values, such as
   `DAILY_POINT_CEILING`, where `0` means "do not call the API at all".
-- **BOMs are a Python problem, not a Node one.** JavaScript's `\s` matches
-  U+FEFF so dotenv eats it, unlike python-dotenv, which cost an hour in
-  `../project-assistant`. Where it does still bite is `JSON.parse`, which
-  throws on a leading BOM. Only relevant if a fixture or cache file is
-  hand-edited, since Node never writes one.
+- **BOMs are less of a problem here than in Python.** JavaScript's `\s`
+  matches U+FEFF so dotenv eats it, unlike python-dotenv, which chokes on a
+  leading BOM. Where it does still bite is `JSON.parse`, which throws on a
+  leading BOM. Only relevant if a fixture or cache file is hand-edited, since
+  Node never writes one.
 - **An invented recipe must be visually distinct from a real one.** A
   model-written cooking time for chicken is an unverified food-safety claim.
   Label the card, and prompt for doneness cues (internal temperature, a visual
