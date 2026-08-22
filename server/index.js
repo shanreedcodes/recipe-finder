@@ -1,4 +1,9 @@
+import dotenv from 'dotenv';
 import express from "express";
+
+
+dotenv.config();
+
 
 /// Create the Express app
 const app = express();
@@ -10,7 +15,7 @@ app.get("/api/health", (req, res) => {
 
 });
 
-app.listen(3000, (error) => {
+app.listen(process.env.PORT|| 3001, (error) => {
   if (error) throw error;
-  console.log("listening on http://localhost:3000");
+  console.log(`listening on http://localhost:${process.env.PORT || 3001}`);
 });
