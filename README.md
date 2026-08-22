@@ -1,9 +1,12 @@
 # Recipe Finder : Server (Express)
 
-> This server is a minimal Express app with one route, GET /api/health, that returns {"ok": true} to confirm the process is running and able to handle requests. It has no dependencies yet, no environment values read, no external calls, so the one question it answers can't fail because something else failed. 
+> This client is a 
 
 
-1. Add git for github repository `git init`
+
+### app/server split
+
+1. Add `app.js` file which will never touch the network, it is pure app construction
 2. Create a `.gitignore` file
 3. Create Server Folder: `server/`
 4. Create a NodeJS Application in the server folder
